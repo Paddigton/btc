@@ -4,6 +4,7 @@ import com.example.crypto.market.exceptions.CantFetchBtcPrice
 import com.example.crypto.market.exceptions.NotEnoughMoneyException
 import com.example.crypto.market.exceptions.UserNotFoundExceptions
 import com.example.crypto.market.model.BtcPrice
+import com.example.crypto.market.model.Credentials
 import com.example.crypto.market.model.User
 import com.example.crypto.market.model.Wallet
 import com.example.crypto.market.repository.UserRepository
@@ -19,6 +20,10 @@ interface CryptoFacade {
     fun getUser(id: Long): User
     fun sellBtc(id: Long, amount: Double): Wallet
     fun buyBtc(id: Long, amount: Double): Wallet
+    fun deleteUser(id: Long)
+    fun deleteAllusers()
+    fun updateFisrtName(id: Long, firstName: String) : User
+    fun updateUserCrenetials(id: Long, credentials: Credentials): User
 }
 
 @Service
@@ -81,6 +86,28 @@ class CryptoFacadeImpl: CryptoFacade {
         return user.wallet
     }
 
+    override fun deleteUser(id: Long) {
+        userRepository.deleteById(id)
+    }
+
+    override fun deleteAllusers() {
+        userRepository.deleteAll()
+    }
+
+    override fun updateFisrtName(id: Long, firstName: String): User {
+        val user = userRepository.getOne(id)
+        val newUser = User(user.id, firstName, user.lastName, user.wallet)
+
+        return userRepository.save(newUser)
+    }
+
+    override fun updateUserCrenetials(id: Long, credentials: Credentials): User {
+        val user = userRepository.getOne(id)
+        val updateUser = User(user.id, credentials.firstName, credentials.lastName, user.wallet)
+
+        return userRepository.save(updateUser)
+    }
+
     fun getBtcPrice(): BtcPrice {
         val response = RestTemplate()
                 .getForObject(API_GET_BTC_PRICE, BtcPrice::class.java) ?: throw CantFetchBtcPrice()
@@ -90,6 +117,6 @@ class CryptoFacadeImpl: CryptoFacade {
 
     companion object{
         const val BTC_PRICE = 5000.0
-        const val API_GET_BTC_PRICE = "https://www.bitstamp.net/api/v2/ticker/{currency_pair}/"
+        const val API_GET_BTC_PRICE = "https://www.bitstamp.net/api/v2/ticker/btcusd/"
     }
 }
